@@ -69,8 +69,4 @@ namespace INvEstigacion
         }
     }
 
-    class JsonSeccion
-    {
-
-    }
 }
