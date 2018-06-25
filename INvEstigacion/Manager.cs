@@ -11,6 +11,8 @@ using System.Web;
 using System.Net;
 //readwrite csvs
 using Microsoft.VisualBasic;
+using Newtonsoft.Json.Linq;
+using System.Threading;
 
 namespace INvEstigacion
 {
@@ -23,19 +25,35 @@ namespace INvEstigacion
         public List<string> seccionesYcn;
         public List<string> seccionesCdmx;
 
+        static Random hortler = new Random();
+
         public Manager()
         {
-            string read;
-            Array split;
+            
             seccionesJal = new List<string>();
             seccionesNln = new List<string>();
             seccionesCdmx = new List<string>();
             seccionesYcn = new List<string>();
             downloader = new WebClient();
 
+        }
+
+        public void HazTuCosa()
+        {
+            CargaTusCeseves();
+            var seccionse = seccionesJal.Where(x => x.Equals("3099")).ToList();
+            DescargarJsons(seccionesNln, "nuevoleon");
+            //SacarJsons(seccionse, "jalisco");
+        }
+
+        public void CargaTusCeseves()
+        {
+            string read;
+            Array split;
+
             read = File.ReadAllText(@"C:\Users\sgt0pimienta\Desktop\INvEstigate Output\jalisco.csv");
             split = read.Split(',');
-            foreach(string line in split) { seccionesJal.Add(line); }
+            foreach (string line in split) { seccionesJal.Add(line); }
 
             read = File.ReadAllText(@"C:\Users\sgt0pimienta\Desktop\INvEstigate Output\nuevoleon.csv");
             split = read.Split(',');
@@ -50,11 +68,9 @@ namespace INvEstigacion
             foreach (string line in split) { seccionesCdmx.Add(line); }
         }
 
-        public void SacarJsons(List<string> listaDeSecciones, string estado)
+        public void DescargarJsons(List<string> listaDeSecciones, string estado)
         {
-            int cuentaDeSecciones = 0;
             string codigoEstado;
-            List<JsonSeccion> datosEstado = new List<JsonSeccion>();
 
             switch (estado)
             {
@@ -65,11 +81,63 @@ namespace INvEstigacion
                 default: throw new Exception("link malo. O eres mala persona o no hay ningún código de estado asignado al estado que intentaste buscar (el programa no soporta ese estado)");
             }
 
-            foreach (string seccion in listaDeSecciones)
+            downloader.Headers.Add("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.87 Safari/537.36");
+
+            foreach (string idSeccion in listaDeSecciones)
+            {
+
+                Console.WriteLine($"Vamos en la {idSeccion}");
+
+                var url = "https://ubicatucasilla.ine.mx/api/casillas/" + codigoEstado + "/" + idSeccion + "/casillas.json";
+
+                var ruta = @"C:\Users\sgt0pimienta\Desktop\INvEstigate Output\jsons\" +  estado + "-" + idSeccion + ".json";
+
+                downloader.DownloadFile(url, ruta);
+
+                Thread.Sleep(hortler.Next(10, 100));
+
+                
+                
+            }
+        }
+
+        public void SacarJsons(List<string> listaDeSecciones, string estado)
+        {
+            int cuentaDeSecciones = 0;
+            List<JsonSeccion> datosEstado = new List<JsonSeccion>();
+
+          
+
+            foreach (string idSeccion in listaDeSecciones)
             {
                 cuentaDeSecciones += 1;
-                var jsonDescargado = downloader.DownloadString("https://ubicatucasilla.ine.mx/api/casillas/" + codigoEstado + "/" + cuentaDeSecciones + "/casillas.json");
-                datosEstado.Add(JsonConvert.DeserializeObject<JsonSeccion>(jsonDescargado));
+                //var jsonDescargado = downloader.DownloadString(url);
+
+                var ruta = @"C:\Users\sgt0pimienta\Desktop\INvEstigate Output\jsons\" + estado + "-" + idSeccion + ".json";
+
+                var jsonDescargado = File.ReadAllText(ruta);
+
+                JObject objetoCompleto = (JObject)JsonConvert.DeserializeObject(jsonDescargado);
+
+
+                foreach (var dataIdes in objetoCompleto.First.First) {
+
+                    var subseccion = JsonConvert.DeserializeObject<JsonSeccion>(dataIdes.First.ToString());
+
+                    foreach (var jsonCasilla in subseccion.Casilla.First) {
+                        var casilla = JsonConvert.DeserializeObject<Casilla>(jsonCasilla.ToString());
+                        subseccion.Casillas.Add(casilla);
+                    }
+
+                    datosEstado.Add(subseccion);
+
+                }
+                
+                
+
+
+
+         
             }
 
             Console.WriteLine("secciones: " + cuentaDeSecciones.ToString());

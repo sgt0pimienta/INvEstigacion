@@ -6,9 +6,10 @@ using System.Threading.Tasks;
 
 namespace INvEstigacion
 {
-    class Point
+    public class Point
     {
-        float Latitud { get; set; }
-        float Longitud { get; set; }
+        public string Type { get; set; }
+        public List<float> Coordinates { get; set; }
+
     }
 }

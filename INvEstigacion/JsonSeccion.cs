@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,22 +7,23 @@ using System.Threading.Tasks;
 
 namespace INvEstigacion
 {
-    class JsonSeccion
+    public class JsonSeccion
     {
-        string Entidad { get; set; }
-        string Localidad { get; set; }
-        string Referencia { get; set; }
-        string Municipio { get; set; }
-        string Manzana { get; set; }
-        string Id { get; set; }
-        string Ubicacion { get; set; }
-        string Seccion { get; set; }
-        List<Casilla> Casillas { get; set; }
-        string NumLocalidad { get; set; }
-        string Titulo { get; set; }
-        string Distrito_federal { get; set; }
-        List<Point> Coordinates { get; set; }
-        string Distrito_local { get; set; }
-        string Domicilio { get; set; }
+        public string Entidad { get; set; }
+        public string Localidad { get; set; }
+        public string Referencia { get; set; }
+        public string Municipio { get; set; }
+        public string Manzana { get; set; }
+        public string Id { get; set; }
+        public string Ubicacion { get; set; }
+        public string Seccion { get; set; }
+        public JObject Casilla { get; set; }
+        public List<Casilla> Casillas { get; set; } = new List<Casilla>();
+        public string NumLocalidad { get; set; }
+        public string Titulo { get; set; }
+        public string Distrito_federal { get; set; }
+        public Point Punto { get; set; }
+        public string Distrito_local { get; set; }
+        public string Domicilio { get; set; }
     }
 }

@@ -6,10 +6,18 @@ using System.Threading.Tasks;
 
 namespace INvEstigacion
 {
-    class Casilla
+    public class Casilla
     {
-        string Nombre_largo { get; set; }
-        string Nombre { get; set; }
-        string Id { get; set; }
+        public string Nombre_largo { get; set; }
+        public string Nombre { get; set; }
+        public string Id { get; set; }
+        public Letra Letra { get; set; }
+    }
+
+    public class Letra {
+        public string Inicio { get; set; }
+        public string Termino { get; set; }
+        public int Mujeres { get; set; }
+        public int Hombres { get; set; }
     }
 }
