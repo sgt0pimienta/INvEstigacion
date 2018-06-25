@@ -20,6 +20,7 @@ namespace INvEstigacion
     {
         //Jalisco = 14, CDMX = 9, Yucatán = 31, NL = 19
         public WebClient downloader;
+        public Reserializer csvWrite;
         public List<string> seccionesJal;
         public List<string> seccionesNln;
         public List<string> seccionesYcn;
@@ -35,15 +36,15 @@ namespace INvEstigacion
             seccionesCdmx = new List<string>();
             seccionesYcn = new List<string>();
             downloader = new WebClient();
+            csvWrite = new Reserializer();
 
         }
 
         public void HazTuCosa()
         {
             CargaTusCeseves();
-            var seccionse = seccionesJal.Where(x => x.Equals("3099")).ToList();
-            DescargarJsons(seccionesNln, "nuevoleon");
-            //SacarJsons(seccionse, "jalisco");
+            var jasons = SacarJsons(seccionesJal, "jalisco");
+            Cesevear(jasons, "jalisco");
         }
 
         public void CargaTusCeseves()
@@ -53,19 +54,19 @@ namespace INvEstigacion
 
             read = File.ReadAllText(@"C:\Users\sgt0pimienta\Desktop\INvEstigate Output\jalisco.csv");
             split = read.Split(',');
-            foreach (string line in split) { seccionesJal.Add(line); }
+            foreach (string line in split) { seccionesJal.Add(line.Trim()); }
 
             read = File.ReadAllText(@"C:\Users\sgt0pimienta\Desktop\INvEstigate Output\nuevoleon.csv");
             split = read.Split(',');
-            foreach (string line in split) { seccionesNln.Add(line); }
+            foreach (string line in split) { seccionesNln.Add(line.Trim()); }
 
             read = File.ReadAllText(@"C:\Users\sgt0pimienta\Desktop\INvEstigate Output\yucatan.csv");
             split = read.Split(',');
-            foreach (string line in split) { seccionesYcn.Add(line); }
+            foreach (string line in split) { seccionesYcn.Add(line.Trim()); }
 
             read = File.ReadAllText(@"C:\Users\sgt0pimienta\Desktop\INvEstigate Output\cdmx.csv");
             split = read.Split(',');
-            foreach (string line in split) { seccionesCdmx.Add(line); }
+            foreach (string line in split) { seccionesCdmx.Add(line.Trim()); }
         }
 
         public void DescargarJsons(List<string> listaDeSecciones, string estado)
@@ -101,18 +102,16 @@ namespace INvEstigacion
             }
         }
 
-        public void SacarJsons(List<string> listaDeSecciones, string estado)
+        public List<Seccion> SacarJsons(List<string> listaDeSecciones, string estado)
         {
             int cuentaDeSecciones = 0;
-            List<JsonSeccion> datosEstado = new List<JsonSeccion>();
-
-          
+            List<Seccion> datosEstado = new List<Seccion>();
 
             foreach (string idSeccion in listaDeSecciones)
             {
-                cuentaDeSecciones += 1;
-                //var jsonDescargado = downloader.DownloadString(url);
+                var seccion = new Seccion() { IdSeccion = idSeccion };
 
+                cuentaDeSecciones += 1;
                 var ruta = @"C:\Users\sgt0pimienta\Desktop\INvEstigate Output\jsons\" + estado + "-" + idSeccion + ".json";
 
                 var jsonDescargado = File.ReadAllText(ruta);
@@ -122,39 +121,59 @@ namespace INvEstigacion
 
                 foreach (var dataIdes in objetoCompleto.First.First) {
 
-                    var subseccion = JsonConvert.DeserializeObject<JsonSeccion>(dataIdes.First.ToString());
+                    var subseccion = JsonConvert.DeserializeObject<Subseccion>(dataIdes.First.ToString());
 
+                    var t = 0;
                     foreach (var jsonCasilla in subseccion.Casilla.First) {
+                        t++;
                         var casilla = JsonConvert.DeserializeObject<Casilla>(jsonCasilla.ToString());
                         subseccion.Casillas.Add(casilla);
                     }
 
-                    datosEstado.Add(subseccion);
+                    seccion.Subsecciones.Add(subseccion);
 
                 }
-                
-                
 
+                datosEstado.Add(seccion);
 
-
-         
             }
 
             Console.WriteLine("secciones: " + cuentaDeSecciones.ToString());
-            WriteDeserialized(datosEstado, "csv");
+
+            return datosEstado;
         }
 
-        public void WriteDeserialized(List<JsonSeccion> lista, string tipo)
+        public void Cesevear(List<Seccion> seccions, string estado)
         {
-            if (tipo == "csv")
-            {
-                string csv = String.Join(",", lista);
-                System.IO.File.WriteAllText(@"C:\Users\sgt0pimienta\Desktop\INvEstigate Output\outputcsv.txt", csv);
-            }
-            else
-            {
+            var ceseves = new List<PuntoCsv>();
 
+            foreach(var seccion in seccions)
+            {
+                foreach( var subseccion in seccion.Subsecciones)
+                {
+                    var csv = new PuntoCsv()
+                    {
+                        Seccion = seccion.IdSeccion,
+                        Direccion = subseccion.Domicilio,
+                        TipoDeCasillas = subseccion.Titulo,
+                        Casillas = subseccion.Titulo.Split(',').Count(),
+                        Ubicacion = subseccion.Ubicacion,
+                        Lng = subseccion.Punto.Coordinates[0],
+                        Lat = subseccion.Punto.Coordinates[1],
+                    };
+                    ceseves.Add(csv);
+                }
             }
+
+
+            var ruta = @"C:\Users\sgt0pimienta\Desktop\INvEstigate Output\" + estado + "-puntos.csv";
+            using (TextWriter wr = File.CreateText(ruta))
+            {
+                var csv = new CsvHelper.CsvWriter(wr);
+                csv.WriteRecords(ceseves);
+            }
+                
         }
+
     }
 }

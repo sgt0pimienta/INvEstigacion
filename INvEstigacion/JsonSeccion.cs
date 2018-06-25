@@ -7,7 +7,14 @@ using System.Threading.Tasks;
 
 namespace INvEstigacion
 {
-    public class JsonSeccion
+
+    public class Seccion
+    {
+        public string IdSeccion { get; set; }
+        public List<Subseccion> Subsecciones { get; set; } = new List<Subseccion>();
+    }
+
+    public class Subseccion
     {
         public string Entidad { get; set; }
         public string Localidad { get; set; }
@@ -25,5 +32,16 @@ namespace INvEstigacion
         public Point Punto { get; set; }
         public string Distrito_local { get; set; }
         public string Domicilio { get; set; }
+    }
+
+    public class PuntoCsv
+    {
+        public string Seccion { get; set; }
+        public string Direccion { get; set; }
+        public string Ubicacion { get; set; }
+        public int Casillas { get; set; }
+        public string TipoDeCasillas { get; set; }
+        public float Lat { get; set; }
+        public float Lng { get; set; }
     }
 }
